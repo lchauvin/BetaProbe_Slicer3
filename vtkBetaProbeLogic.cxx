@@ -71,8 +71,39 @@ vtkBetaProbeLogic::~vtkBetaProbeLogic()
   if(this->GetMappingRunning())
     {
     this->StopMapping();
-    //this->m_Threader->Delete();
+    this->m_Threader->Delete();
     }
+
+  if(this->PositionTransform)
+    {
+    this->PositionTransform->Delete();
+    }
+
+  if(this->DataToMap)
+    {
+    this->DataToMap->Delete();
+    }
+
+  if(this->ColorNode)
+    {
+    this->ColorNode->Delete();
+    }
+  
+  if(this->MappedVolume)
+    {
+    this->MappedVolume->Delete();
+    }
+
+  if(this->RASToIJKMatrix)
+    {
+    this->RASToIJKMatrix->Delete();
+    }
+
+  if(this->IJKToRASDirectionMatrix)
+    {
+    this->IJKToRASDirectionMatrix->Delete();
+    }
+
 }
 
 
