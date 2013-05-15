@@ -71,8 +71,40 @@ vtkBetaProbeLogic::~vtkBetaProbeLogic()
   if(this->GetMappingRunning())
     {
     this->StopMapping();
-    //this->m_Threader->Delete();
+    this->m_Threader->Delete();
     }
+
+  if(this->PositionTransform)
+    {
+    this->PositionTransform->Delete();
+    }
+
+  if(this->DataToMap)
+    {
+    this->DataToMap->Delete();
+    }
+
+  if(this->ColorNode)
+    {
+    this->ColorNode->Delete();
+    }
+  
+  if(this->MappedVolume)
+    {
+    this->MappedVolume->Delete();
+    }
+
+  if(this->RASToIJKMatrix)
+    {
+    this->RASToIJKMatrix->Delete();
+    }
+
+  if(this->IJKToRASDirectionMatrix)
+    {
+    this->IJKToRASDirectionMatrix->Delete();
+    }
+
+>>>>>>> c4d06ee95f6464472cb31179757b026f9d45e732
 }
 
 
@@ -233,11 +265,11 @@ ITK_THREAD_RETURN_TYPE vtkBetaProbeLogic::MappingFunction(void* pInfoStruct)
                                   MatrixToWorld->GetElement(2,3),
                                   1};
 
-      //      double PointRAS[4];
-      //BetaProbeLogic->GetIJKToRASDirectionMatrix()->MultiplyPoint(PointDirection, PointRAS);
+      double PointRAS[4];
+      BetaProbeLogic->GetIJKToRASDirectionMatrix()->MultiplyPoint(PointDirection, PointRAS);
 
       double PointIJK[4];
-      BetaProbeLogic->GetRASToIJKMatrix()->MultiplyPoint(PointDirection, PointIJK);
+      BetaProbeLogic->GetRASToIJKMatrix()->MultiplyPoint(PointRAS, PointIJK);
 
       // Get Smoothed counts from UDPServerNode (or Gamma for small amout of activity)
       double Counts = 0;
@@ -248,30 +280,29 @@ ITK_THREAD_RETURN_TYPE vtkBetaProbeLogic::MappingFunction(void* pInfoStruct)
       default: Counts = UDPS->GetSmoothedCounts(); break;
       }
 
-
       // Check probe position in IJK coordinate system is in the image
       // Check current value is higher than value already mapped (if any)
-//      // Map value
-     if((PointIJK[0] > extent[0]+1) && (PointIJK[0] < extent[1]-1))
-       {
-       if((PointIJK[1] > extent[2]+1) && (PointIJK[1] < extent[3]-1))
-         {
-         if((PointIJK[2] > extent[4]+1) && (PointIJK[2] < extent[5]-1))
-           {
-	     for(double i=PointIJK[0]-BetaProbeHalfSizeInPixels[0];i<PointIJK[0]+BetaProbeHalfSizeInPixels[0];i+=0.5)
+      // Map value
+      if((PointIJK[0] > extent[0]+1) && (PointIJK[0] < extent[1]-1))
+        {
+        if((PointIJK[1] > extent[2]+1) && (PointIJK[1] < extent[3]-1))
+          {
+          if((PointIJK[2] > extent[4]+1) && (PointIJK[2] < extent[5]-1))
+            {
+            for(double i=PointIJK[0]-BetaProbeHalfSizeInPixels[0];i<PointIJK[0]+BetaProbeHalfSizeInPixels[0];i+=0.5)
               {
-		for(double j=PointIJK[1]-BetaProbeHalfSizeInPixels[1];j<PointIJK[1]+BetaProbeHalfSizeInPixels[1];j+=0.5)
+              for(double j=PointIJK[1]-BetaProbeHalfSizeInPixels[1];j<PointIJK[1]+BetaProbeHalfSizeInPixels[1];j+=0.5)
                 {
-		  for(double k=PointIJK[2]-BetaProbeHalfSizeInPixels[2];k<PointIJK[2]+BetaProbeHalfSizeInPixels[2];k+=0.5)
+                for(double k=PointIJK[2]-BetaProbeHalfSizeInPixels[2];k<PointIJK[2]+BetaProbeHalfSizeInPixels[2];k+=0.5)
                   {
-		   if(Counts >= imageData->GetScalarComponentAsDouble(i,j,k,0))
-		     {
-		       imageData->SetScalarComponentFromDouble(i,
-							       j,
-							       k,
-							       0,
-							       Counts);
-		    }
+                  if(Counts >= imageData->GetScalarComponentAsDouble(i,j,k,0))
+                    {
+                    imageData->SetScalarComponentFromDouble(i,
+                                                            j,
+                                                            k,
+                                                            0,
+                                                            Counts);
+                    }
                   }
                 }
               }

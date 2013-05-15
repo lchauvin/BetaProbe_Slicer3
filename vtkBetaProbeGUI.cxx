@@ -127,6 +127,8 @@ vtkBetaProbeGUI::~vtkBetaProbeGUI ( )
 
   this->RemoveGUIObservers();
 
+  this->SetModuleLogic ( NULL );
+
   //----------------------------------------------------------------
   // Remove GUI widgets
 
@@ -134,75 +136,88 @@ vtkBetaProbeGUI::~vtkBetaProbeGUI ( )
     {
     this->Capture->SetParent(NULL);
     this->Capture->Delete();
+    this->Capture = NULL;
     }
 
   if (this->Start_Button)
     {
     this->Start_Button->SetParent(NULL);
     this->Start_Button->Delete();
+    this->Start_Button = NULL;
     }
 
   if (this->Stop_Button)
     {
     this->Stop_Button->SetParent(NULL);
     this->Stop_Button->Delete();
+    this->Stop_Button = NULL;
     }
 
   if (this->CounterNode)
     {
     this->CounterNode->SetParent(NULL);
     this->CounterNode->Delete();
+    this->CounterNode = NULL;
     }
 
   if (this->TrackerNode)
     {
     this->TrackerNode->SetParent(NULL);
     this->TrackerNode->Delete();
+    this->TrackerNode = NULL;
     }
 
   if (this->Capture_status)
     {
     this->Capture_status->SetParent(NULL);
     this->Capture_status->Delete();
+    this->Capture_status = NULL;
     }
 
   if (this->FileSelector)
     {
     this->FileSelector->SetParent(NULL);
     this->FileSelector->Delete();
+    this->FileSelector = NULL;
     }
 
   if (this->SelectFile)
     {
     this->SelectFile->SetParent(NULL);
     this->SelectFile->Delete();
+    this->SelectFile = NULL;
     }
 
   if (this->CloseFile)
     {
     this->CloseFile->SetParent(NULL);
     this->CloseFile->Delete();
+    this->CloseFile = NULL;
     }
 
   if(this->Probe_Matrix)
     {
     this->Probe_Matrix->Delete();
+    this->Probe_Matrix = NULL;
     }
 
   if (this->RadioBackgroundButton)
     {
     this->RadioBackgroundButton->SetParent(NULL);
     this->RadioBackgroundButton->Delete();
+    this->RadioBackgroundButton = NULL;
     }
   if (this->BackgroundValueEntry)
     {
     this->BackgroundValueEntry->SetParent(NULL);
     this->BackgroundValueEntry->Delete();
+    this->BackgroundValueEntry = NULL;
     }
   if (this->BackgroundAcceptButton)
     {
     this->BackgroundAcceptButton->SetParent(NULL);
     this->BackgroundAcceptButton->Delete();
+    this->BackgroundAcceptButton = NULL;
     }
 
 
@@ -210,16 +225,21 @@ vtkBetaProbeGUI::~vtkBetaProbeGUI ( )
     {
     this->RadioTumorButton->SetParent(NULL);
     this->RadioTumorButton->Delete();
+    this->RadioTumorButton = NULL;
     }
+
   if (this->TumorValueEntry)
     {
     this->TumorValueEntry->SetParent(NULL);
     this->TumorValueEntry->Delete();
+    this->TumorValueEntry = NULL;
     }
+
   if (this->TumorAcceptButton)
     {
     this->TumorAcceptButton->SetParent(NULL);
     this->TumorAcceptButton->Delete();
+    this->TumorAcceptButton = NULL;
     }
 
 
@@ -227,17 +247,20 @@ vtkBetaProbeGUI::~vtkBetaProbeGUI ( )
     {
     this->RadioThresholdButton->SetParent(NULL);
     this->RadioThresholdButton->Delete();
+    this->RadioThresholdButton = NULL;
     }
   if (this->ThresholdValueEntry)
     {
     this->ThresholdValueEntry->SetParent(NULL);
     this->ThresholdValueEntry->Delete();
+    this->ThresholdValueEntry = NULL;
     }
 
   if(this->StartDetectionButton)
     {
     this->StartDetectionButton->SetParent(NULL);
     this->StartDetectionButton->Delete();
+    this->StartDetectionButton = NULL;
     }
 
 
@@ -245,6 +268,7 @@ vtkBetaProbeGUI::~vtkBetaProbeGUI ( )
     {
     this->DataSelector->SetParent(NULL);
     this->DataSelector->Delete();
+    this->DataSelector = NULL;
     }
 
 
@@ -253,24 +277,42 @@ vtkBetaProbeGUI::~vtkBetaProbeGUI ( )
     {
     this->MappingButton->SetParent(NULL);
     this->MappingButton->Delete();
+    this->MappingButton = NULL;
     }
 
   if(this->LabelStatus)
     {
     this->LabelStatus->SetParent(NULL);
     this->LabelStatus->Delete();
+    this->LabelStatus = NULL;
     }
 
 
   //----------------------------------------------------------------
   // Unregister Logic class
 
-  this->SetModuleLogic ( NULL );
+  if(this->Counts)
+    {
+    this->Counts->Delete();
+    this->Counts = NULL;
+    }
+
+  if(this->Probe_Position)
+    {
+    this->Probe_Position->Delete();
+    this->Probe_Position = NULL;
+    }
+
+  if(this->DataToMap)
+    {
+    this->DataToMap->Delete();
+    this->DataToMap = NULL;
+    }
 
   if(this->BetaProbeCountsWithTimestamp.is_open())
     {
     this->BetaProbeCountsWithTimestamp.close();
-    }
+    }  
 }
 
 
@@ -890,7 +932,7 @@ void vtkBetaProbeGUI::ProcessGUIEvents(vtkObject *caller,
         mappedVolume->SetSpacing(this->DataToMap->GetSpacing());
         mappedVolume->Modified();
         this->GetMRMLScene()->AddNode(mappedVolume);
-        //this->CenterImage(mappedVolume);
+        this->CenterImage(mappedVolume);
 
         this->GetLogic()->SetMappedVolume(mappedVolume);
 
@@ -903,7 +945,6 @@ void vtkBetaProbeGUI::ProcessGUIEvents(vtkObject *caller,
         vtkMatrix4x4* IJKToRASDirectionMatrix = vtkMatrix4x4::New();
         this->DataToMap->GetIJKToRASDirectionMatrix(IJKToRASDirectionMatrix);
         this->GetLogic()->SetIJKToRASDirectionMatrix(IJKToRASDirectionMatrix);
-	mappedVolume->SetIJKToRASDirectionMatrix(IJKToRASDirectionMatrix);
 
         // Set Logic
         this->GetLogic()->SetPositionTransform(this->Probe_Position);
@@ -912,6 +953,10 @@ void vtkBetaProbeGUI::ProcessGUIEvents(vtkObject *caller,
         this->GetLogic()->SetCountsType(COUNTS_TYPE);
 
         // Start Mapping Thread
+        if(this->BetaProbeCountsWithTimestamp.is_open())
+          {
+          this->BetaProbeCountsWithTimestamp << "Start Mapping" << std::endl;
+          }
         this->GetLogic()->StartMapping();
 
         // Delete
@@ -924,6 +969,10 @@ void vtkBetaProbeGUI::ProcessGUIEvents(vtkObject *caller,
         }
       else
         {
+        if(this->BetaProbeCountsWithTimestamp.is_open())
+          {
+          this->BetaProbeCountsWithTimestamp << "Stop Mapping" << std::endl;
+          }
         this->GetLogic()->StopMapping();
         }
 
